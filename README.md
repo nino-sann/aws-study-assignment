@@ -1,0 +1,3 @@
+手動で構築した環境をCloudFormationを利用して再現する。
+CloudFormationを使ってEC2を構築。
+CloudFormationでRDS、ELBまでの環境を構築。
