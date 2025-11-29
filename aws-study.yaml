@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: aws-study-cloudformation template
+
+Resources: # このセクションが必要です
+  awsstudyVPC: # リソースの論理ID
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Value: aws-study-vpc
+          Key: Name
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: aws-study-igw
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref awsstudyVPC
+      InternetGatewayId: !Ref InternetGateway
+  RoutetablePublicSubnet:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref awsstudyVPC
+      Tags:
+        - Key: Name
+          Value: aws-study-RouteTablePublicSubnet
+  RoutePublicSubnet:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - AttachGateway
+    Properties:
+      RouteTableId: !Ref RoutetablePublicSubnet
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  Public1Subnet:
+    Type: AWS::EC2::Subnet
+    DependsOn:
+      - AttachGateway
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref awsstudyVPC
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Name
+          Value: Public1-Subnet
+  Public2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref awsstudyVPC
+      CidrBlock: 10.0.3.0/24
+      Tags:
+        - Key: Name
+          Value: Public2-Subnet
+  Private1Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      VpcId: !Ref awsstudyVPC
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: Private1-Subnet
+  Private2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-northeast-1c
+      VpcId: !Ref awsstudyVPC
+      CidrBlock: 10.0.4.0/24
+      Tags:
+        - Key: Name
+          Value: Private2-Subnet
+  RouteTableAssocPublic1Subnet:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Public1Subnet
+      RouteTableId: !Ref RoutetablePublicSubnet
+  RouteTableAssocPublic2Subnet:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Public2Subnet
+      RouteTableId: !Ref RoutetablePublicSubnet
