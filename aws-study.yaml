@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: aws-study-cloudformation template
 
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+    Type: AWS::EC2::KeyPair::KeyName
+
 Resources: # このセクションが必要です
   awsstudyVPC: # リソースの論理ID
     Type: AWS::EC2::VPC
@@ -40,12 +45,11 @@ Resources: # このセクションが必要です
       GatewayId: !Ref InternetGateway
   Public1Subnet:
     Type: AWS::EC2::Subnet
-    DependsOn:
-      - AttachGateway
     Properties:
       AvailabilityZone: ap-northeast-1a
       VpcId: !Ref awsstudyVPC
       CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
           Value: Public1-Subnet
@@ -86,3 +90,40 @@ Resources: # このセクションが必要です
     Properties:
       SubnetId: !Ref Public2Subnet
       RouteTableId: !Ref RoutetablePublicSubnet
+  awsstudyec2sg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ec2-sg
+      GroupDescription: SeGroupPublic1
+      VpcId: !Ref awsstudyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: aws-study-ec2-sg
+  Public1EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: ap-northeast-1a
+      KeyName: !Ref KeyName
+      DisableApiTermination: false
+      ImageId: ami-03852a41f1e05c8e4
+      InstanceType: t3.micro
+      Monitoring: false
+      SecurityGroupIds:
+        - !Ref awsstudyec2sg
+      SubnetId: !Ref Public1Subnet
+      Tags:
+        - Key: Name
+          Value: aws-study-ec2
