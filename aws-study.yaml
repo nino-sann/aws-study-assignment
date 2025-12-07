@@ -13,6 +13,9 @@ Parameters:
     Description: RDS Master User Password
     Type: String
     NoEcho: true
+  CidrIpFromInternet:
+    Description: CIDR IP range for allowing access from the internet
+    Type: String
 
 Resources: # このセクションが必要です
  #VPC
@@ -141,7 +144,7 @@ Resources: # このセクションが必要です
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Ref CidrIpFromInternet
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -227,10 +230,6 @@ Resources: # このセクションが必要です
       GroupDescription: SeGroupELB
       VpcId: !Ref awsstudyVPC
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
