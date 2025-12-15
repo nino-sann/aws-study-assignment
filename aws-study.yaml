@@ -16,6 +16,7 @@ Parameters:
   CidrIpFromInternet:
     Description: CIDR IP range for allowing access from the internet
     Type: String
+    AllowedPattern: ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$
 
 Resources: # このセクションが必要です
  #VPC
@@ -259,7 +260,7 @@ Resources: # このセクションが必要です
       Matcher:
         HttpCode: "200,300,301"
       Name: aws-study-alb-tg #ターゲットグループ画面のName
-      Port: 80
+      Port: 8080
       Protocol: HTTP
       Targets:
         - Id: !Ref Public1EC2Instance
