@@ -264,7 +264,6 @@ Resources: # このセクションが必要です
       Protocol: HTTP
       Targets:
         - Id: !Ref Public1EC2Instance
-          Port: 8080
       TargetType: instance
       VpcId: !Ref awsstudyVPC
 #ALB
