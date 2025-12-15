@@ -16,6 +16,7 @@ Parameters:
   CidrIpFromInternet:
     Description: CIDR IP range for allowing access from the internet
     Type: String
+    AllowedPattern: ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$
 
 Resources: # このセクションが必要です
  #VPC
@@ -27,7 +28,7 @@ Resources: # このセクションが必要です
       EnableDnsSupport: true
       InstanceTenancy: default
       Tags:
-        - Value: aws-study-vpc
+        - Value: aws-study-vpc #お使いのVPC画面のName
           Key: Name
 
  #Internetgateway
@@ -36,7 +37,7 @@ Resources: # このセクションが必要です
     Properties:
       Tags:
         - Key: Name
-          Value: aws-study-igw
+          Value: aws-study-igw #インターネットゲートウェイ画面のName
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -50,7 +51,7 @@ Resources: # このセクションが必要です
       VpcId: !Ref awsstudyVPC
       Tags:
         - Key: Name
-          Value: aws-study-RouteTablePublicSubnet
+          Value: aws-study-RouteTablePublicSubnet #ルートテーブル画面のName
   RoutePublicSubnet:
     Type: AWS::EC2::Route
     DependsOn:
@@ -67,7 +68,7 @@ Resources: # このセクションが必要です
       VpcId: !Ref awsstudyVPC
       Tags:
         - Key: Name
-          Value: aws-study-RouteTablePrivateSubnet
+          Value: aws-study-RouteTablePrivateSubnet #ルートテーブル画面のName
 
  #Subnet
   Public1Subnet:
@@ -79,7 +80,7 @@ Resources: # このセクションが必要です
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: Public1-Subnet
+          Value: Public1-Subnet #サブネット画面のName
   Public2Subnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -89,7 +90,7 @@ Resources: # このセクションが必要です
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: Public2-Subnet
+          Value: Public2-Subnet #サブネット画面のName
   Private1Subnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -98,7 +99,7 @@ Resources: # このセクションが必要です
       CidrBlock: 10.0.2.0/24
       Tags:
         - Key: Name
-          Value: Private1-Subnet
+          Value: Private1-Subnet #サブネット画面のName
   Private2Subnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -107,7 +108,7 @@ Resources: # このセクションが必要です
       CidrBlock: 10.0.4.0/24
       Tags:
         - Key: Name
-          Value: Private2-Subnet
+          Value: Private2-Subnet #サブネット画面のName
 
  #Route-PublicSubnet
   RouteTableAssocPublic1Subnet:
@@ -137,8 +138,8 @@ Resources: # このセクションが必要です
   awsstudyec2sg:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: ec2-sg
-      GroupDescription: SeGroupPublic1
+      GroupName: ec2-sg #セキリュティグループ画面のセキュリティグループ名 defalutにあたるもの
+      GroupDescription: SeGroupEC2
       VpcId: !Ref awsstudyVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -150,12 +151,12 @@ Resources: # このセクションが必要です
           ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
+          FromPort: 8080
+          ToPort: 8080
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: aws-study-ec2-sg
+          Value: aws-study-ec2-sg #セキュリティグループ画面のName
  #EC2
   Public1EC2Instance:
     Type: AWS::EC2::Instance
@@ -171,7 +172,7 @@ Resources: # このセクションが必要です
       SubnetId: !Ref Public1Subnet
       Tags:
         - Key: Name
-          Value: aws-study-ec2
+          Value: aws-study-ec2 #インスタンス画面のName
   
  #RDS Subnet Group
   rdsDBSubnetGroup:
@@ -183,12 +184,12 @@ Resources: # このセクションが必要です
         - !Ref Private2Subnet
       Tags:
         - Key: Name
-          Value: aws-study-rds-subnetgroup
+          Value: aws-study-rds-subnetgroup #サブネットグループのName
  #RDS Security Group
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: rds-sg
+      GroupName: rds-sg #セキリュティグループ画面のセキュリティグループ名 defalutにあたるもの
       GroupDescription: SeGroup-RDS
       VpcId: !Ref awsstudyVPC
       SecurityGroupIngress:
@@ -197,13 +198,15 @@ Resources: # このセクションが必要です
           ToPort: 3306
           SourceSecurityGroupId: !Ref awsstudyec2sg
       Tags:
-        - Value: aws-study-rds-sg
+        - Value: aws-study-rds-sg #セキュリティグループ画面のName
           Key: Name
  #RDS
   Private1RDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       AllocatedStorage: 20
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
       AvailabilityZone: ap-northeast-1a
       BackupRetentionPeriod: 1
       DBInstanceClass: db.t4g.micro
@@ -218,7 +221,7 @@ Resources: # このセクションが必要です
       StorageType: gp2
       Tags:
         - Key: Name
-          Value: aws-study-rds
+          Value: aws-study-rds #?
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
 
@@ -226,7 +229,7 @@ Resources: # このセクションが必要です
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: alb-sg
+      GroupName: alb-sg #セキリュティグループ画面のセキュリティグループ名 defalutにあたるもの
       GroupDescription: SeGroupELB
       VpcId: !Ref awsstudyVPC
       SecurityGroupIngress:
@@ -240,7 +243,7 @@ Resources: # このセクションが必要です
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: aws-study-alb-sg
+          Value: aws-study-alb-sg #セキュリティグループ画面のName
 #ALB Target Group
   ALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -248,7 +251,7 @@ Resources: # このセクションが必要です
       HealthCheckEnabled: true
       HealthCheckIntervalSeconds: 30
       HealthCheckPath: /
-      HealthCheckPort: 80
+      HealthCheckPort: traffic-port
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 5
@@ -256,11 +259,12 @@ Resources: # このセクションが必要です
       IpAddressType: ipv4
       Matcher:
         HttpCode: "200,300,301"
-      Name: aws-study-alb-tg
-      Port: 80
+      Name: aws-study-alb-tg #ターゲットグループ画面のName
+      Port: 8080
       Protocol: HTTP
       Targets:
         - Id: !Ref Public1EC2Instance
+          Port: 8080
       TargetType: instance
       VpcId: !Ref awsstudyVPC
 #ALB
@@ -268,7 +272,7 @@ Resources: # このセクションが必要です
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       IpAddressType: ipv4
-      Name: aws-study-alb
+      Name: aws-study-alb #ロードバランサー画面のName?
       Scheme: internet-facing
       SecurityGroups:
         - !Ref ALBSecurityGroup
@@ -277,7 +281,7 @@ Resources: # このセクションが必要です
         - !Ref Public2Subnet
       Tags:
         - Key: Name
-          Value: aws-study-alb
+          Value: aws-study-alb #ロードバランサー画面のName? こっちはいる？
       Type: application
 #ALB Listener
   ALBListener:
