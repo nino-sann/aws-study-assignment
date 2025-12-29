@@ -17,6 +17,9 @@ Parameters:
     Description: CIDR IP range for allowing access from the internet
     Type: String
     AllowedPattern: ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$
+  MyEmailAddress:
+    Description: Enter the email address for SNS subscription
+    Type: String
 
 Resources: # このセクションが必要です
  #VPC
@@ -288,3 +291,107 @@ Resources: # このセクションが必要です
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: 80
       Protocol: HTTP
+
+#SNS Topic
+  SNSTopicEC2:
+    Type: AWS::SNS::Topic
+    Properties: 
+      DisplayName: "EC2 Monitoring Notifications" #メールのタイトル
+      TopicName: "EC2-CPU-Alarm-Topic" #トピック画面の名前
+#SNS Subscription
+  SNSSubscriptionEC2:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SNSTopicEC2
+      Protocol: "email"
+      Endpoint: !Ref MyEmailAddress
+#Cloud Watch Alarm
+  EC2CPUUtilizationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: "EC2-CPUUtilization-Alarm" #アラーム画面の名前
+      AlarmDescription: "Alarm when CPU usage exceeds 0.1%"
+      Namespace: "AWS/EC2"
+      Dimensions:
+        - Value: !Ref Public1EC2Instance
+          Name: "InstanceId"
+      MetricName: "CPUUtilization"
+      Unit: "Percent"
+      Statistic: "Average"
+      Period: 300
+      Threshold: 0.1
+      ComparisonOperator: "GreaterThanThreshold"
+      EvaluationPeriods: 1
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref SNSTopicEC2
+
+#WAF
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: aws-study-alb-waf #保護パック(WebACL)画面の名前
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: aws-study-alb-waf
+        SampledRequestsEnabled: true
+      Rules:
+        - Name: AWS-AWSManagedRulesCommonRuleSet #WAFのルール画面の名前
+          Priority: 1
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            MetricName: AWS-AWSManagedRulesCommonRuleSet
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref ApplicationLoadBalancer
+      WebACLArn: !GetAtt WebACL.Arn
+#WAF Log
+  WAFLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: aws-waf-logs-alb-alc #Cloud Watch Log Manegementのロググループの名前
+      RetentionInDays: 1
+      Tags:
+        - Key: Name
+          Value: aws-waf-logs-alb-alc
+  WAFLogConfig:
+    DependsOn:
+      - WAFToCloudWatchLogsPolicy
+    Type: AWS::WAFv2::LoggingConfiguration
+    Properties:
+      ResourceArn: !GetAtt WebACL.Arn
+      LogDestinationConfigs:
+        - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${WAFLogGroup}
+  WAFToCloudWatchLogsPolicy:
+    Type: AWS::Logs::ResourcePolicy
+    Properties:
+      PolicyName: WAFToCloudWatchLogsPolicy
+      PolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "AllowWAFToLog",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "delivery.logs.amazonaws.com"
+              },
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${WAFLogGroup}:*"
+            }
+          ]
+        }
