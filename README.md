@@ -1,5 +1,15 @@
-手動で構築した環境をCloudFormationを利用して再現する。
-CloudFormationを使ってEC2を構築。
-CloudFormationでRDS、ELBまでの環境を構築。
-CloudFormationでCloud Watch Alarmを構築。
-CloudFormationでWAFを構築。
+## 1. プロジェクト概要
+本リポジトリは、AWSの学習を目的として作成したCloudFormationテンプレートです。
+
+単一のYAMLファイルで、VPCからセキュリティ・監視まで一括でデプロイできる構成になっています。
+
+| 項目 | 内容 |
+|---|---|
+| 目的 | CloudFormationを利用してAWS環境を構築できるようになる|
+| テンプレート形式 | AWS CloudFormaiton（単一YAMLファイル） |
+| デプロイリージョン | ap-northeeast-1（東京）|
+| 主な学習テーマ | ネットワーク設計、リソースの作成、セキュリティ、監視 |
+
+## 2. アーキテクチャ
+### 2.1 構成図
+![構成図](./aws-study.drawio.png)
