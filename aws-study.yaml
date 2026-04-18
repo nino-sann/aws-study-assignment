@@ -143,7 +143,7 @@ Resources: # このセクションが必要です
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: ec2-sg #セキリュティグループ画面のセキュリティグループ名 defalutにあたるもの
-      GroupDescription: SeGroupEC2
+      GroupDescription: SeGroupEC2kk
       VpcId: !Ref awsstudyVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
